@@ -82,7 +82,7 @@ const CartScreen = () => {
             </ListGroup.Item>
 
             <ListGroup.Item>
-              <Button type='button' className='btn btn-block btn-success' disabled={cartItems.length === 0} onClick={checkOutHandler}>Proceed to Checkout</Button>
+              <Button type='button' className='btn btn-block btn-secondary' disabled={cartItems.length === 0} onClick={checkOutHandler}>Proceed to Checkout</Button>
             </ListGroup.Item>
           </ListGroup>
         </Card>
