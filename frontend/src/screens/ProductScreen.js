@@ -7,18 +7,16 @@ import { listProductDetails } from '../actions/productActions'
 import Loader from '../components/Loader'
 import Message from '../components/Message'
 
-const ProductScreen = ({history}) => {
+const ProductScreen = () => {
     const [qty,setQty] = useState(1)
     const {id} = useParams();
     const navigate = useNavigate()
     const dispatch = useDispatch()
     const productDetails = useSelector(state => state.productDetails)
     const {loading,error,product} = productDetails
-    /*const product = products.find((p) => p._id === params.id) */
     useEffect(() => {
         dispatch(listProductDetails(id))
-      // eslint-disable-next-line react-hooks/exhaustive-deps
-      },[dispatch]) 
+      },[dispatch,id]) 
 
     const addtoCartHandler = () => {
         navigate(`/cart/${id}?qty=${qty}`)
