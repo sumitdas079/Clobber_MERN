@@ -20,7 +20,7 @@ function App() {
       <main className='py-3'>
         <Container>
           <Routes>
-            <Route path='/order/:id' element={<OrderScreen />} />
+            <Route path='/orders/:id' element={<OrderScreen />} />
             <Route path='/product/:id' element={<ProductScreen />} />
             <Route path='/login' element={<LoginScreen />} />
             <Route path='/shipping' element={<ShippingScreen />} />

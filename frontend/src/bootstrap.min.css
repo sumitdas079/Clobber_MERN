@@ -12,6 +12,10 @@
  * Copyright 2011-2022 Twitter, Inc.
  * Licensed under MIT (https://github.com/twbs/bootstrap/blob/main/LICENSE)
  */
+
+ /* ORIGINALS 
+  * minty-warning: #ffce67
+ */
 @import url(https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;700&display=swap);
 
 :root {
@@ -21,7 +25,7 @@
     --bs-pink: #e83e8c;
     --bs-red: #ff7851;
     --bs-orange: #fd7e14;
-    --bs-yellow: #ffce67;
+    --bs-yellow:  #f0ad4e;
     --bs-green: #56cc9d;
     --bs-teal: #20c997;
     --bs-cyan: #6cc3d5;
@@ -42,7 +46,7 @@
     --bs-secondary: #f3969a;
     --bs-success: #56cc9d;
     --bs-info: #6cc3d5;
-    --bs-warning: #ffce67;
+    --bs-warning: #f0ad4e /* #f0ad4e */;
     --bs-danger: #ff7851;
     --bs-light: #f8f9fa;
     --bs-dark: #343a40;
@@ -2179,7 +2183,7 @@ progress {
 
 .table-warning {
     --bs-table-color: #fff;
-    --bs-table-bg: #ffce67;
+    --bs-table-bg: #f0ad4e;
     --bs-table-border-color: #ffd376;
     --bs-table-striped-bg: #ffd06f;
     --bs-table-striped-color: #000;
@@ -3407,8 +3411,8 @@ fieldset:disabled .btn {
 
 .btn-warning {
     --bs-btn-color: #fff;
-    --bs-btn-bg: #ffce67;
-    --bs-btn-border-color: #ffce67;
+    --bs-btn-bg: #f0ad4e;
+    --bs-btn-border-color: #f0ad4e;
     --bs-btn-hover-color: #fff;
     --bs-btn-hover-bg: #d9af58;
     --bs-btn-hover-border-color: #cca552;
@@ -3418,8 +3422,8 @@ fieldset:disabled .btn {
     --bs-btn-active-border-color: #bf9b4d;
     --bs-btn-active-shadow: inset 0 3px 5px rgba(0, 0, 0, 0.125);
     --bs-btn-disabled-color: #fff;
-    --bs-btn-disabled-bg: #ffce67;
-    --bs-btn-disabled-border-color: #ffce67
+    --bs-btn-disabled-bg: #f0ad4e;
+    --bs-btn-disabled-border-color: #f0ad4e
 }
 
 .btn-danger {
@@ -3542,19 +3546,19 @@ fieldset:disabled .btn {
 }
 
 .btn-outline-warning {
-    --bs-btn-color: #ffce67;
-    --bs-btn-border-color: #ffce67;
+    --bs-btn-color: #f0ad4e;
+    --bs-btn-border-color: #f0ad4e;
     --bs-btn-hover-color: #fff;
-    --bs-btn-hover-bg: #ffce67;
-    --bs-btn-hover-border-color: #ffce67;
+    --bs-btn-hover-bg: #f0ad4e;
+    --bs-btn-hover-border-color: #f0ad4e;
     --bs-btn-focus-shadow-rgb: 255, 206, 103;
     --bs-btn-active-color: #fff;
-    --bs-btn-active-bg: #ffce67;
-    --bs-btn-active-border-color: #ffce67;
+    --bs-btn-active-bg: #f0ad4e;
+    --bs-btn-active-border-color: #f0ad4e;
     --bs-btn-active-shadow: inset 0 3px 5px rgba(0, 0, 0, 0.125);
-    --bs-btn-disabled-color: #ffce67;
+    --bs-btn-disabled-color: #f0ad4e;
     --bs-btn-disabled-bg: transparent;
-    --bs-btn-disabled-border-color: #ffce67;
+    --bs-btn-disabled-border-color: #f0ad4e;
     --bs-gradient: none
 }
 
@@ -5387,7 +5391,7 @@ fieldset:disabled .btn {
 
 .alert-warning {
     --bs-alert-color: white;
-    --bs-alert-bg: #ffce67;
+    --bs-alert-bg: #f0ad4e;
     --bs-alert-border-color: #fff0d1
 }
 
@@ -7747,7 +7751,7 @@ fieldset:disabled .btn {
 }
 
 .link-warning {
-    color: #ffce67 !important
+    color: #f0ad4e !important
 }
 
 .link-warning:focus,
@@ -12725,7 +12729,7 @@ fieldset:disabled .btn {
 }
 
 .btn-outline-warning {
-    color: #ffce67
+    color: #f0ad4e
 }
 
 .btn-outline-danger {

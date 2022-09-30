@@ -1,48 +1,94 @@
-import React, { useEffect } from 'react'
+import React, { useState, useEffect } from 'react'
+import axios from 'axios'
+import { PayPalButton } from 'react-paypal-button-v2'
+import { Elements } from '@stripe/react-stripe-js'
+import { loadStripe } from '@stripe/stripe-js'
 import { Link } from 'react-router-dom'
 import { useNavigate, useParams } from 'react-router-dom'
 import { useDispatch, useSelector } from 'react-redux'
-import { Button, Row, Col, ListGroup, Image, Card } from 'react-bootstrap'
+import { Row, Col, ListGroup, Image, Card } from 'react-bootstrap'
 import Message from '../components/Message'
 import Loader from '../components/Loader'
-import { getOrderDetails } from '../actions/orderActions'
+import { getOrderDetails, payOrder } from '../actions/orderActions'
+import { savePaymentMethod } from '../actions/cartActions'
+import { ORDER_PAY_RESET } from '../constants/orderConstant'
+import CheckoutFormStripe from '../components/CheckoutFormStripe'
+import getDateString from '../utils/getDateString'
 
 const OrderScreen = () => {
 
+    const publish_key = `${process.env.REACT_APP_STRIPE_PUBLISHABLE_KEY}`
+    const stripe_key = loadStripe(publish_key)
     const { id } = useParams()
     const dispatch = useDispatch()
     const navigate = useNavigate()
-    const cart = useSelector((state) => state.cart)
 
-    const addDecimal = (num) => {
-        return (Math.round(num * 100) / 100).toFixed(2)
-    }
-    let ci = cart.cartItems
-    cart.itemsPrice = addDecimal(ci.reduce((acc, item) => acc + item.price * item.qty, 0))
-    cart.shippingPrice = addDecimal(cart.itemsPrice > 100 ? 0 : 100)
-    cart.totalPrice = (Number(cart.itemsPrice) + Number(cart.shippingPrice)).toFixed(2)
+    const [sdk, setSDK] = useState(false)
 
     const orderDetails = useSelector((state) => state.orderDetails)
     const { order, loading, error } = orderDetails
 
+    const orderPay = useSelector((state) => state.orderPay)
+    const { loading: loadingPay, success: successPay } = orderPay
+
+    /* const orderDeliver = useSelector((state) => state.orderDeliver)
+    const { loading: loadingDeliver, success: successDeliver } = orderDeliver */
+
+    const userLogin = useSelector((state) => state.userLogin)
+    const { userInfo } = userLogin
+
+    if (!loading) {
+        const addDecimal = (num) => {
+            return (Math.round(num * 100) / 100).toFixed(2)
+        }
+        const od = order.orderItems
+        order.itemsPrice = addDecimal(od.reduce((acc, item) => acc + item.price * item.qty, 0))
+    }
+
     useEffect(() => {
-        dispatch(getOrderDetails(id))
-    }, [dispatch, id])
+        if (!order || successPay) {
+            if (successPay) { dispatch({ type: ORDER_PAY_RESET }) }
+            dispatch(getOrderDetails(id))
+        }
+    }, [order, id, dispatch, successPay])
+
+    useEffect(() => {
+        const addPayPalscript = async () => {
+            const { data: clientID } = await axios.get('/api/config/paypal')
+            const script = document.createElement('script')
+            script.type = 'text/javascript'
+            script.src = `https://www.paypal.com/sdk/js?client-id=${clientID}`
+            script.async = true
+            script.onload = () => { setSDK(true) }
+            document.body.appendChild(script)
+        }
+        if (!userInfo) {
+            navigate('/login')
+        }
+        if (!sdk) {
+            addPayPalscript()
+        }
+    }, [dispatch, navigate, sdk, successPay, userInfo, order, id])
+
+    const successPaymentHandler = (paymentResult) => {
+        console.log(paymentResult);
+        dispatch(savePaymentMethod('PayPal'))
+        dispatch(payOrder(id, { ...paymentResult, paymentMode: 'paypal' }))
+    }
 
     return loading ? (
         <Loader />
     ) : error ? (
-        <Message variant='danger'>{error}</Message>
+        <Message variant='secondary'>{error}</Message>
     ) : (
         <>
             <h1>Order {order._id}</h1>
             <Row>
                 <Col md={8}>
-                    <ListGroup vriant='flush'>
-
+                    <ListGroup variant='flush'>
                         <ListGroup.Item>
                             <h2>Ordered Items</h2>
-                            {order.orderItems.length === 0 ? <Message>Order is empty!</Message> :
+                            {order.orderItems.length === 0 ? <Message>No orders found!</Message> :
                                 (
                                     <ListGroup variant='flush'>
                                         {order.orderItems.map((item, index) =>
@@ -51,7 +97,7 @@ const OrderScreen = () => {
                                                 <Col md={1}>
                                                     <Image src={item.image} alt={item.name} fluid rounded />
                                                 </Col>
-                                                <Col><Link to={`/product/${item.product}`}>{item.name}</Link></Col>
+                                                <Col><Link className='text-decoration-none' to={`/product/${item.product}`}>{item.name}</Link></Col>
                                                 <Col md={4}>
                                                     {item.qty} x &#8377; {item.price} = &#8377; {item.qty * item.price}
                                                 </Col>
@@ -64,15 +110,31 @@ const OrderScreen = () => {
                         <ListGroup.Item>
                             <h2>Shipping</h2>
                             <p>
-                                <strong>Address: </strong>
+                                <strong>Name: </strong>
+                                {order.user.name}
+                            </p>
+                            <p>
+                                <strong>Email: </strong>{' '}
+                                <a href={`mailto:${order.user.email}`}>{order.user.email}</a>
+                            </p>
+                            <p>
+                                <strong>Address: </strong>{' '}
                                 {order.shippingAddress.address}, {order.shippingAddress.city}{' '}, {order.shippingAddress.pincode}{' '}, {order.shippingAddress.country}
                             </p>
+                            <div>
+                                {order.isDelivered ? (<Message variant='success'>Delivered on {getDateString(order.deliveredAt)}</Message>) : (<Message variant='secondary'>Not Delivered</Message>)}
+                            </div>
                         </ListGroup.Item>
 
                         <ListGroup.Item>
                             <h2>Payment</h2>
-                            <strong>Method: </strong>
-                            {order.paymentMethod}
+                            <p>
+                                <strong>Method: </strong>
+                                {order.paymentMethod}
+                            </p>
+                            <div>
+                                {order.isPaid ? (<Message variant='success'>Paid on {getDateString(order.paidAt)}</Message>) : (<Message variant='secondary'>Not paid</Message>)}
+                            </div>
                         </ListGroup.Item>
                     </ListGroup>
                 </Col>
@@ -101,13 +163,27 @@ const OrderScreen = () => {
                                     <Col>&#8377; {order.totalPrice}</Col>
                                 </Row>
                             </ListGroup.Item>
-                            <ListGroup.Item>
-                                {error && <Message variant='danger'>{error}</Message>}
-                            </ListGroup.Item>
-                            <ListGroup.Item className='d-grid gap-2'>
-                                <Button type='button' className='btn btn-lg' variant='dark' disabled={order.orderItems === 0}>Place Order</Button>
-                            </ListGroup.Item>
-
+                            {!order.isPaid && (
+                                <>
+                                    {order.paymentMethod === 'PayPal' ? (
+                                        <ListGroup.Item>
+                                            {loadingPay && <Loader />}
+                                            {!sdk ? (<Loader />) :
+                                                (<PayPalButton currency='USD' amount={Number(order.totalPrice / 80).toFixed(2)} onSuccess={successPaymentHandler} />)}
+                                        </ListGroup.Item>
+                                    ) : (
+                                        <ListGroup.Item>
+                                            <h6 className='text-primary'>Enter your card information</h6>
+                                            {loadingPay && <Loader/>}
+                                            {
+                                                <Elements stripe={stripe_key}>
+                                                    <CheckoutFormStripe price={order.totalPrice*100} orderId={id}/>
+                                                </Elements>
+                                            }
+                                        </ListGroup.Item>
+                                    )}
+                                </>
+                            )}
                         </ListGroup>
                     </Card>
                 </Col>

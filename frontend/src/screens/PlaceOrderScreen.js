@@ -16,9 +16,9 @@ const PlaceOrderScreen = () => {
     const addDecimal = (num) => {
         return (Math.round(num*100)/100).toFixed(2)
     }
-    let ci = cart.cartItems
+    const ci = cart.cartItems
     cart.itemsPrice = addDecimal(ci.reduce((acc, item) => acc + item.price * item.qty, 0))
-    cart.shippingPrice = addDecimal(cart.itemsPrice > 100 ? 0 : 100)
+    cart.shippingPrice = addDecimal(cart.itemsPrice > 5000 ? 300 : 100)
     cart.totalPrice = (Number(cart.itemsPrice)+Number(cart.shippingPrice)).toFixed(2)
 
     const orderCreate = useSelector((state) => state.orderCreate)
@@ -26,10 +26,10 @@ const PlaceOrderScreen = () => {
 
     useEffect(() => {
         if(success){
-            navigate(`/order/${order._id}`)
+            navigate(`/orders/${order._id}`)
         }
-        //eslint-disable-next-line
-    },[navigate,success])
+        
+    },[navigate,success,order])
 
     const placeOrderHandler = () => {
         dispatch(createOrder({
@@ -60,7 +60,7 @@ const PlaceOrderScreen = () => {
                                                 <Col md={1}>
                                                     <Image src={item.image} alt={item.name} fluid rounded />
                                                 </Col>
-                                                <Col><Link to={`/product/${item.product}`}>{item.name}</Link></Col>
+                                                <Col><Link className='text-decoration-none' to={`/product/${item.product}`}>{item.name}</Link></Col>
                                                 <Col md={4}>
                                                     {item.qty} x &#8377; {item.price} = &#8377; {item.qty * item.price}
                                                 </Col>

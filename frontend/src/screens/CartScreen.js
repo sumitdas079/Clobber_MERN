@@ -42,7 +42,7 @@ const CartScreen = () => {
         <h1>YOUR CART</h1>
         {
           cartItems.length === 0 ? (
-            <Message>Your cart is empty<Alert.Link to='/'>Go back</Alert.Link></Message>
+            <Message>Your cart is empty  <Alert.Link to='/'>Go back</Alert.Link></Message>
           ) : (
             <ListGroup variant='flush'>
               {cartItems.map(item => (
@@ -52,7 +52,7 @@ const CartScreen = () => {
                       <Image src={item.image} alt={item.name} fluid rounded />
                     </Col>
                     <Col md={3}>
-                      <Link to={`/product/${item.product}`}>{item.name}</Link>
+                      <Link className='text-decoration-none' to={`/product/${item.product}`}>{item.name}</Link>
                     </Col>
                     <Col md={2}>{item.price}</Col>
                     <Col md={2}>
@@ -82,7 +82,7 @@ const CartScreen = () => {
             </ListGroup.Item>
 
             <ListGroup.Item>
-              <Button type='button' className='btn btn-block btn-secondary' disabled={cartItems.length === 0} onClick={checkOutHandler}>Proceed to Checkout</Button>
+              <Button type='button' className='btn btn-block btn-warning' disabled={cartItems.length === 0} onClick={checkOutHandler}>Proceed to Checkout</Button>
             </ListGroup.Item>
           </ListGroup>
         </Card>
