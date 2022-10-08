@@ -42,27 +42,13 @@ const getOrderById = asyncHandler(async (req, res) => {
 const updateOrderPaid = asyncHandler(async (req, res) => {
     const order = await Order.findById(req.params.id)
     if (order) {
-        const { paymentMode } = req.body
         order.isPaid = true
         order.paidAt = Date.now()
-        if(paymentMode==='paypal')
-        {
-            order.paymentResult = {
-                type:'paypal',
-                id: req.body.id,
-                status: req.body.status,
-                update_time: req.body.update_time,
-                email_address: req.body.payer.email_address
-            }
-        }
-        else if(paymentMode==='stripe')
-        {
-            order.paymentResult = {
-                type: 'stripe',
-                id: req.body.id,
-                status: req.body.status,
-                email_address: req.body.payer.email_address
-            }
+        order.paymentResult = {
+            id: req.body.id,
+            status: req.body.status,
+            update_time: req.body.created,
+            payment_method: req.body.payment_method,
         }
         const updatedOrder = await order.save()
         res.status(201).json(updatedOrder)
@@ -72,18 +58,15 @@ const updateOrderPaid = asyncHandler(async (req, res) => {
     }
 })
 
-// @desc  create payment intent for stripe payment
-// @route POST /api/orders/stripe-payment
-// @access PUBLIC
-const stripePayment = asyncHandler(async (req,res) => {
-    const {price, email} = req.body
-    const paymentIntent = await stripe.paymentIntents.create({
-        amount: price,
-        currency: 'inr',
-        receipt_email: email,
-        payment_method_types: ['card']
-    })
-    res.send({ clientSecret: paymentIntent.client_secret})
+
+// @desc     Get logged in user's orders
+// @route    GET /api/orders/myorders
+// @access   Private
+const getMyOrders = asyncHandler(async (req, res) => {
+    const orders = await Order.find({ user: req.user._id }).sort('-createdAt')
+    res.json(orders)
 })
 
-module.exports = { addOrderItems, getOrderById, updateOrderPaid, stripePayment }
+
+
+module.exports = { addOrderItems, getOrderById, updateOrderPaid, getMyOrders }

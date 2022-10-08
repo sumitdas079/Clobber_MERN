@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import { useNavigate } from 'react-router-dom'
 import { useDispatch, useSelector } from 'react-redux'
 import { Button, Row, Col, ListGroup, Image, Card } from 'react-bootstrap'
+import { CART_RESET } from '../constants/cartConstant'
 import Message from '../components/Message'
 import CheckoutSteps from '../components/CheckoutSteps'
 import { createOrder } from '../actions/orderActions'
@@ -12,6 +13,7 @@ const PlaceOrderScreen = () => {
     const dispatch = useDispatch()
     const navigate = useNavigate()
     const cart = useSelector((state) => state.cart)
+    const { cartItems, shippingAddress, paymentMethod } = cart
 
     const addDecimal = (num) => {
         return (Math.round(num*100)/100).toFixed(2)
@@ -24,18 +26,24 @@ const PlaceOrderScreen = () => {
     const orderCreate = useSelector((state) => state.orderCreate)
     const { order, success, error } = orderCreate
 
+/*     const userLogin = useSelector((state) => state.userLogin)
+    const { userInfo } = userLogin */
+
     useEffect(() => {
         if(success){
+            localStorage.removeItem('cartItems')
+            dispatch({ type: CART_RESET, payload: shippingAddress})
             navigate(`/orders/${order._id}`)
         }
         
-    },[navigate,success,order])
+    },[navigate,dispatch,success,shippingAddress,order])
 
-    const placeOrderHandler = () => {
+    const placeOrderHandler = (e) => {
+        e.preventDefault()
         dispatch(createOrder({
-            orderItems: cart.cartItems,
-            shippingAddress: cart.shippingAddress,
-            paymentMethod: cart.paymentMethod,
+            orderItems: cartItems,
+            shippingAddress,
+            paymentMethod,
             itemsPrice: cart.itemsPrice,
             shippingPrice: cart.shippingPrice,
             totalPrice: cart.totalPrice,
@@ -47,7 +55,7 @@ const PlaceOrderScreen = () => {
             <CheckoutSteps step1 step2 step3 step4 />
             <Row>
                 <Col md={8}>
-                    <ListGroup vriant='flush'>
+                    <ListGroup variant='flush'>
 
                         <ListGroup.Item>
                             <h2>Ordered Items</h2>
@@ -74,14 +82,14 @@ const PlaceOrderScreen = () => {
                             <h2>Shipping</h2>
                             <p>
                                 <strong>Address: </strong>
-                                {cart.shippingAddress.address}, {cart.shippingAddress.city}{' '}, {cart.shippingAddress.pincode}{' '}, {cart.shippingAddress.country}
+                                {shippingAddress.address}, {shippingAddress.city}{' '}, {shippingAddress.pincode}{' '}, {shippingAddress.country}
                             </p>
                         </ListGroup.Item>
 
                         <ListGroup.Item>
                             <h2>Payment</h2>
                             <strong>Method: </strong>
-                            {cart.paymentMethod}
+                            {paymentMethod}
                         </ListGroup.Item>
                     </ListGroup>
                 </Col>

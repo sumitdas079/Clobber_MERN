@@ -1,6 +1,5 @@
-import React, { useState, useEffect } from 'react'
+import React, { useEffect } from 'react'
 import axios from 'axios'
-import { PayPalButton } from 'react-paypal-button-v2'
 import { Elements } from '@stripe/react-stripe-js'
 import { loadStripe } from '@stripe/stripe-js'
 import { Link } from 'react-router-dom'
@@ -10,20 +9,20 @@ import { Row, Col, ListGroup, Image, Card } from 'react-bootstrap'
 import Message from '../components/Message'
 import Loader from '../components/Loader'
 import { getOrderDetails, payOrder } from '../actions/orderActions'
-import { savePaymentMethod } from '../actions/cartActions'
 import { ORDER_PAY_RESET } from '../constants/orderConstant'
 import CheckoutFormStripe from '../components/CheckoutFormStripe'
 import getDateString from '../utils/getDateString'
 
+
+const stripePromise = axios.get('/api/payments/config/stripe-pk')
+    .then((res) => res.data)
+    .then((data) => loadStripe(data.public_key))
+
 const OrderScreen = () => {
 
-    const publish_key = `${process.env.REACT_APP_STRIPE_PUBLISHABLE_KEY}`
-    const stripe_key = loadStripe(publish_key)
     const { id } = useParams()
     const dispatch = useDispatch()
     const navigate = useNavigate()
-
-    const [sdk, setSDK] = useState(false)
 
     const orderDetails = useSelector((state) => state.orderDetails)
     const { order, loading, error } = orderDetails
@@ -46,34 +45,19 @@ const OrderScreen = () => {
     }
 
     useEffect(() => {
-        if (!order || successPay) {
-            if (successPay) { dispatch({ type: ORDER_PAY_RESET }) }
-            dispatch(getOrderDetails(id))
-        }
-    }, [order, id, dispatch, successPay])
-
-    useEffect(() => {
-        const addPayPalscript = async () => {
-            const { data: clientID } = await axios.get('/api/config/paypal')
-            const script = document.createElement('script')
-            script.type = 'text/javascript'
-            script.src = `https://www.paypal.com/sdk/js?client-id=${clientID}`
-            script.async = true
-            script.onload = () => { setSDK(true) }
-            document.body.appendChild(script)
-        }
         if (!userInfo) {
             navigate('/login')
         }
-        if (!sdk) {
-            addPayPalscript()
+        if (!order || order._id !== id || successPay) {
+            dispatch({ type: ORDER_PAY_RESET })
+            dispatch(getOrderDetails(id))
         }
-    }, [dispatch, navigate, sdk, successPay, userInfo, order, id])
+    }, [order, userInfo, id, dispatch, navigate, successPay])
+
 
     const successPaymentHandler = (paymentResult) => {
         console.log(paymentResult);
-        dispatch(savePaymentMethod('PayPal'))
-        dispatch(payOrder(id, { ...paymentResult, paymentMode: 'paypal' }))
+        dispatch(payOrder(id, paymentResult))
     }
 
     return loading ? (
@@ -164,25 +148,16 @@ const OrderScreen = () => {
                                 </Row>
                             </ListGroup.Item>
                             {!order.isPaid && (
-                                <>
-                                    {order.paymentMethod === 'PayPal' ? (
-                                        <ListGroup.Item>
-                                            {loadingPay && <Loader />}
-                                            {!sdk ? (<Loader />) :
-                                                (<PayPalButton currency='USD' amount={Number(order.totalPrice / 80).toFixed(2)} onSuccess={successPaymentHandler} />)}
-                                        </ListGroup.Item>
-                                    ) : (
-                                        <ListGroup.Item>
-                                            <h6 className='text-primary'>Enter your card information</h6>
-                                            {loadingPay && <Loader/>}
-                                            {
-                                                <Elements stripe={stripe_key}>
-                                                    <CheckoutFormStripe price={order.totalPrice*100} orderId={id}/>
-                                                </Elements>
-                                            }
-                                        </ListGroup.Item>
-                                    )}
-                                </>
+
+                                <ListGroup.Item>
+                                    {loadingPay && <Loader />}
+                                    {
+                                        <Elements stripe={stripePromise}>
+                                            <CheckoutFormStripe totalPrice={order.totalPrice * 100} paymentHandler={successPaymentHandler} />
+                                        </Elements>
+                                    }
+                                </ListGroup.Item>
+
                             )}
                         </ListGroup>
                     </Card>

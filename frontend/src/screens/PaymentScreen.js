@@ -5,7 +5,6 @@ import { Form, Button, Col } from 'react-bootstrap'
 import FormContainer from '../components/FormContainer'
 import CheckoutSteps from '../components/CheckoutSteps'
 import { savePaymentMethod } from '../actions/cartActions'
-import { getUserDetails } from '../actions/userActions'
 
 const PaymentScreen = () => {
     
@@ -22,6 +21,10 @@ const PaymentScreen = () => {
 
     const [paymentMethod, setPaymentMethod] = useState('Credit/Debit Card')
 
+    const handlePayment= (e) => {
+        setPaymentMethod(e.target.value)
+    } 
+
     const submitHandler = (e) => {
         e.preventDefault()
         dispatch(savePaymentMethod(paymentMethod))
@@ -37,11 +40,8 @@ const PaymentScreen = () => {
                     <Form.Label as='legend' className='form-label my-4'>Select Payment Method</Form.Label>
                 
                 <Col>
-                    <Form.Check type='radio' label='Credit/Debit Card' id='Credit/Debit Card' name='paymentMethod' 
-                    value='Credit/Debit Card' checked={paymentMethod==='Credit/Debit Card'} onChange={(e) => setPaymentMethod(e.target.value)}/>
-
-                    <Form.Check type='radio' label='PayPal' id='PayPal' name='paymentMethod' 
-                    value='PayPal' checked={paymentMethod==='PayPal'} onChange={(e) => setPaymentMethod(e.target.value)}/>
+                    <Form.Check inline type='radio' label='Credit/Debit Card' id='Credit/Debit Card' name='paymentMethod' 
+                    value='Credit/Debit Card' checked onChange={handlePayment}/>
                 </Col>
                 </Form.Group>
 

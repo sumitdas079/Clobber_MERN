@@ -14,7 +14,6 @@
   "author": "Sumit Das",
   "license": "MIT",
   "dependencies": {
-    "@reduxjs/toolkit": "^1.8.5",
     "axios": "^0.27.2",
     "bcryptjs": "^2.4.3",
     "dotenv": "^16.0.1",

@@ -1,81 +1,113 @@
 import React, { useState, useEffect } from 'react'
 import axios from 'axios'
-import { useDispatch, useSelector } from 'react-redux'
 import { CardElement, useStripe, useElements } from '@stripe/react-stripe-js'
-import { Form, Button } from 'react-bootstrap'
-import { payOrder } from '../actions/orderActions'
-import { savePaymentMethod } from '../actions/cartActions'
+import { Form, Button, Col } from 'react-bootstrap'
 import Message from '../components/Message'
+import Loader from '../components/Loader'
 
-const CheckoutFormStripe = ({price, orderId}) => {
+const CARD_ELEMENT_OPTIONS = {
+    style: {
+        base: {
+            color: '#32325d',
+            fontFamily: '"Helvetica Neue", Helvetica, sans-serif',
+            fontSmoothing: 'antialiased',
+            fontSize: '16px',
+            '::placeholder': {
+                color: '#aab7c4',
+            },
+        },
+        invalid: {
+            color: '#fa755a',
+            iconColor: '#fa755a',
+        },
+    },
+}
 
-    const [error, setError] = useState('')
-    const [clientSecret, setClientSecret] = useState('')
+const CheckoutFormStripe = ({ totalPrice, paymentHandler }) => {
+
+    const [error, setError] = useState(null)
+    const [clientSecret, setClientSecret] = useState(null)
+    const [processing, setProcessing] = useState(false);
+    const [disabled, setDisabled] = useState(true);
+    const [succeeded, setSucceeded] = useState(false);
     const stripe = useStripe()
     const elements = useElements()
-    const dispatch = useDispatch()
-
-    const userLogin = useSelector((state) => state.userLogin)
-    const {userInfo} = userLogin
 
     useEffect(() => {
-        const getClientSecret = async() => {
-            const {data} = await axios.post('/api/orders/stripe-payment',{ price,email: userInfo.email },
-            {
-                headers:{ 'Content-Type': 'application/json' }
-            })
-            setClientSecret(data.clientSecret)
-        }
-        if(userInfo && price)
-        {
-            getClientSecret()
-        }
-    },[price,userInfo])
-
-
-    const makePayment = async(e) => {
-        e.preventDefault()
-        if(!stripe || !elements) { return }
-        if(clientSecret)
-        {
-            const payload = await stripe.confirmCardPayment(clientSecret,{
-                payment_method:{
-                    card: elements.getElement(CardElement),
-                    billing_details: { name: userInfo.name, email: userInfo.email }
+        const createPaymentIntent = async () => {
+            const { data } = await axios.post('/api/payments/config/stripe-payment-intent',
+                {
+                    amount: totalPrice.toFixed(0),
+                    currency: 'inr',
                 }
-            })
-            console.log(payload.error);
-            if(!payload.error)
-            {
-                dispatch(savePaymentMethod('Stripe'))
-                dispatch(payOrder(orderId,{
-                    ...payload.paymentIntent,
-                    payment_method:'stripe'
-                }))
-            }
-            else{
-                setError(payload.error.message)
-            }
+            )
+            setClientSecret(data.client_secret)
         }
-        else{ window.location.reload() }
+        createPaymentIntent()
+    }, [totalPrice])
+
+
+    const handleChange = async (e) => {
+        // Listen for changes in the CardElement
+        // and display any errors as the customer types their card details
+        setDisabled(e.empty)
+        setError(e.error ? e.error.message : '')
     }
 
-  return (
-    <Form id='payment-form' onSubmit={makePayment}>
-        {error && (<Message dismissable variant='danger'>{error}</Message>)}
-        <Form.Group className='py-3'>
-            <CardElement options={{ style: {
-                base:{
-                    fontSize:'16px', color: '#424770', '::placeholder': { color: '#aab7c4'}
+    const handleSubmit = async (e) => {
+        // We don't want to let default form submission happen here,
+        // which would refresh the page.
+        e.preventDefault();
+        setProcessing(true);
+
+        if (!stripe || !elements) {
+            // Stripe.js has not yet loaded.
+            // Make sure to disable form submission until Stripe.js has loaded.
+            return;
+        }
+
+        const result = await stripe.confirmCardPayment(clientSecret, {
+            payment_method: {
+                card: elements.getElement(CardElement),
+                billing_details: {
+                    name: 'John Doe',
                 },
-                invalid:{ color: '#9e2146' }
-            }}} id='card-element'/>
-        </Form.Group>
-        <div className='d-grid'>
-            <Button disabled={!stripe} size='lg' type='submit'>Pay Now</Button>
-        </div>
-    </Form>
-  )
+            },
+        });
+
+        if (result.error) {
+            setError(`Payment failed ${result.error.message}`);
+            console.log(result.error.message);
+            setProcessing(false);
+        } else {
+            setError(null);
+            setProcessing(false);
+            setSucceeded(true);
+
+            if (result.paymentIntent.status === 'succeeded') {
+                console.log('[PaymentIntent]', result.paymentIntent);
+                paymentHandler(result.paymentIntent);
+            }
+        }
+    }
+
+    return (
+        <>
+            {processing && <Loader />}
+            {error && <Message variant='danger'>{error}</Message>}
+            <Form onSubmit={handleSubmit}>
+                <Form.Group className='py-3'>
+                    <Form.Label>Enter your card info: </Form.Label>
+                    <Col>
+                        <CardElement options={CARD_ELEMENT_OPTIONS} onChange={handleChange} />
+                    </Col>
+                </Form.Group>
+                <div className='d-grid'>
+                    <Button disabled={!stripe || disabled || succeeded || processing} size='lg' type='submit'>Pay Now</Button>
+                </div>
+            </Form>
+        </>
+    )
 }
 
 export default CheckoutFormStripe
