@@ -26,8 +26,8 @@ An ecommerce website built using the MERN stack, Redux and Bootstrap
 
 #### Dev dependencies
 
--[Concurrently](https://www.npmjs.com/package/concurrently) - For running the backend and frontend at the same time
--[Nodemon](https://www.npmjs.com/package/nodemon) - Automatically restarting the node application when file changes in the directory are detected.
+- [Concurrently](https://www.npmjs.com/package/concurrently) - For running the backend and frontend at the same time
+- [Nodemon](https://www.npmjs.com/package/nodemon) - Automatically restarting the node application when file changes in the directory are detected
 
 ## Features (will keep updating)
 
