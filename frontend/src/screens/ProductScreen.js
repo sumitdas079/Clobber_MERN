@@ -24,7 +24,7 @@ const ProductScreen = () => {
     return (
         <>
             <Link className='btn btn-outline-light my-3' to='/'>Go Back</Link>
-            {loading ? <Loader/> : error ? <Message variant='primary'>{error}</Message> : 
+            {loading ? <Loader/> : error ? <Message variant='danger'>{error}</Message> : 
             <Row>
             <Col md={6}>
                 <Image src={product.image} alt={product.name}/>
@@ -62,7 +62,7 @@ const ProductScreen = () => {
                         <ListGroup.Item>
                             <Row>
                                 <Col>Status: </Col>
-                                <Col>{product.countInStock>0 ? 'In stock' : 'Out of stock'}</Col>
+                                <Col>{product.countInStock>0 ? <span style={{ color: 'green' }}>In stock</span> : <span style={{ color: 'red' }}>Out of stock</span>}</Col>
                             </Row>
                         </ListGroup.Item>
 
